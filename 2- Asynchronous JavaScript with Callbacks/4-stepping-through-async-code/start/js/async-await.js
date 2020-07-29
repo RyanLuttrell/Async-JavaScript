@@ -4,7 +4,20 @@ const peopleList = document.getElementById('people');
 const btn = document.querySelector('button');
 
 // Handle all fetch requests
+async function getPeopleInSpace(url) {
+  const peopleResponse = await fetch(url);
+  const peopleJSON = await peopleResponse.json();
 
+  const profiles = peopleJSON.people.map(async (person) => {
+    const craft = person.craft;
+    const profileResponse = await fetch(wikiUrl + person.name);
+    const profileJSON = await profileResponse.json();
+
+    return {...profileJSON, craft};
+  });
+
+  return Promise.all(profiles);
+}
 
 // Generate the markup for each profile
 function generateHTML(data) {
@@ -12,7 +25,6 @@ function generateHTML(data) {
     const section = document.createElement('section');
     peopleList.appendChild(section);
     section.innerHTML = `
-      <img src=${person.thumbnail.source}>
       <span>${person.craft}</span>
       <h2>${person.title}</h2>
       <p>${person.description}</p>
@@ -21,7 +33,10 @@ function generateHTML(data) {
   });
 }
 
-btn.addEventListener('click', (event) => {
+btn.addEventListener('click', async (event) => {
   event.target.textContent = "Loading...";
 
+  const astors = await getPeopleInSpace(astrosUrl);
+  generateHTML(astors);
+  event.target.remove();
 });
